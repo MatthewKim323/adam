@@ -52,11 +52,16 @@ function Star() {
   )
 }
 
-export function Hero() {
+type HeroProps = {
+  /** pin the moving parts to one moment: word index and ticker offset in px */
+  still?: { word?: number; tick?: number }
+}
+
+export function Hero({ still }: HeroProps = {}) {
   const rootRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [measureRef, widths] = useWordWidths()
-  const [word, setWord] = useState(WORDS[0])
+  const [word, setWord] = useState(WORDS[still?.word ?? 0])
   const [email, setEmail] = useState('')
   // once something was typed, the native placeholder takes over for good
   const [touched, setTouched] = useState(false)
@@ -115,7 +120,13 @@ export function Hero() {
                   <div className="hero__heading-inner">
                     <h1 className="hero__h1" aria-label={`Turn traffic into ${word} automatically`}>
                       {'Turn traffic into '}
-                      <RotatingWord words={WORDS} widths={widths} scope={rootRef} onChange={setWord} />
+                      <RotatingWord
+                        words={WORDS}
+                        widths={widths}
+                        scope={rootRef}
+                        onChange={setWord}
+                        frozen={still?.word}
+                      />
                       <br />
                       automatically
                     </h1>
@@ -175,7 +186,7 @@ export function Hero() {
               <div className="hero__rule" />
             </div>
             <div className="hero__clients-row">
-              <ClientTicker clients={CLIENTS} />
+              <ClientTicker clients={CLIENTS} frozen={still?.tick} />
             </div>
           </motion.div>
         </div>

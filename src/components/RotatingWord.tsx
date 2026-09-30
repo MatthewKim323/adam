@@ -47,17 +47,19 @@ type Props = {
   /** the element whose visibility drives the rotation */
   scope: React.RefObject<HTMLElement | null>
   onChange?: (word: string) => void
+  /** pin to one word and stop rotating (stills, visual checks) */
+  frozen?: number
 }
 
-export function RotatingWord({ words, widths, scope, onChange }: Props) {
-  const [index, setIndex] = useState(0)
+export function RotatingWord({ words, widths, scope, onChange, frozen }: Props) {
+  const [index, setIndex] = useState(frozen ?? 0)
   const [swapped, setSwapped] = useState(false)
   const inView = useInView(scope, { amount: 0.3 })
   const reduced = useReducedMotion()
   const firstRun = useRef(true)
 
   useEffect(() => {
-    if (!inView || reduced) return
+    if (!inView || reduced || frozen !== undefined) return
     let timer: number
     const tick = () => {
       setSwapped(true)
@@ -67,7 +69,7 @@ export function RotatingWord({ words, widths, scope, onChange }: Props) {
     timer = window.setTimeout(tick, firstRun.current ? START_DELAY + INTERVAL : INTERVAL)
     firstRun.current = false
     return () => window.clearTimeout(timer)
-  }, [inView, reduced, words.length])
+  }, [inView, reduced, frozen, words.length])
 
   const word = words[index]
   useEffect(() => onChange?.(word), [word, onChange])
