@@ -28,3 +28,6 @@ find
 
 # origin blackout: the source url stays local
 reference/*/.origin.json
+
+# capture data stays local
+reference/
