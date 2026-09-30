@@ -700,3 +700,17 @@
     height: 74px;
   }
 }
+
+.hero__caret--blink {
+  animation: hero-caret-blink 1s steps(1) infinite;
+}
+@keyframes hero-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
