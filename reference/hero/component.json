@@ -1,0 +1,83 @@
+{
+ "name": "hero",
+ "capturedAt": "2026-09-29T23:50:09.949Z",
+ "brand": "Adam",
+ "stack": {
+  "framework": "framer",
+  "framer": true,
+  "tailwind": false,
+  "lenis": true,
+  "gsap": false,
+  "motion": false,
+  "notes": [
+   "Framer: appear ids, data-framer-name layer names, per-breakpoint class rules. The module rip applies."
+  ]
+ },
+ "viewports": {
+  "desktop": {
+   "width": 1440,
+   "root": {
+    "w": 1400,
+    "h": 1021.83
+   },
+   "elements": 125,
+   "textRuns": 17,
+   "media": 18,
+   "heightFromContext": false,
+   "htmlVariant": 0
+  },
+  "tablet": {
+   "width": 1024,
+   "root": {
+    "w": 984,
+    "h": 845.83
+   },
+   "elements": 125,
+   "textRuns": 14,
+   "media": 18,
+   "heightFromContext": false,
+   "htmlVariant": 1
+  },
+  "tablet-810": {
+   "width": 810,
+   "root": {
+    "w": 770,
+    "h": 845.83
+   },
+   "elements": 128,
+   "textRuns": 17,
+   "media": 18,
+   "heightFromContext": false,
+   "htmlVariant": 2
+  },
+  "mobile": {
+   "width": 390,
+   "root": {
+    "w": 370,
+    "h": 837.25
+   },
+   "elements": 124,
+   "textRuns": 16,
+   "media": 18,
+   "heightFromContext": false,
+   "htmlVariant": 3
+  }
+ },
+ "css": {
+  "rules": 74,
+  "stateful": 3,
+  "conditional": 18,
+  "keyframes": 0,
+  "fontFaces": 5,
+  "vars": 97
+ },
+ "states": 2,
+ "frames": [
+  "load",
+  "hover-00-link",
+  "hover-01-field",
+  "loop"
+ ],
+ "assets": 15,
+ "errors": []
+}

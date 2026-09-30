@@ -1,0 +1,26 @@
+{
+ "desktop": {
+  "--token-acf8d3ea-905c-4d50-b281-a61755920805": "#fff",
+  "--framer-will-change-override": "none",
+  "--token-b9170a14-97b4-4e18-aede-19f08e32f4ed": "#fffe54",
+  "--token-46847404-05b1-4b83-af4f-49d67bab0eb5": "#fff"
+ },
+ "tablet": {
+  "--token-acf8d3ea-905c-4d50-b281-a61755920805": "#fff",
+  "--framer-will-change-override": "none",
+  "--token-b9170a14-97b4-4e18-aede-19f08e32f4ed": "#fffe54",
+  "--token-46847404-05b1-4b83-af4f-49d67bab0eb5": "#fff"
+ },
+ "tablet-810": {
+  "--token-acf8d3ea-905c-4d50-b281-a61755920805": "#fff",
+  "--framer-will-change-override": "none",
+  "--token-b9170a14-97b4-4e18-aede-19f08e32f4ed": "#fffe54",
+  "--token-46847404-05b1-4b83-af4f-49d67bab0eb5": "#fff"
+ },
+ "mobile": {
+  "--token-acf8d3ea-905c-4d50-b281-a61755920805": "#fff",
+  "--framer-will-change-override": "none",
+  "--token-b9170a14-97b4-4e18-aede-19f08e32f4ed": "#fffe54",
+  "--token-46847404-05b1-4b83-af4f-49d67bab0eb5": "#fff"
+ }
+}

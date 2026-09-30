@@ -1,0 +1,28 @@
+[
+ {
+  "cid": "c61",
+  "kind": "link",
+  "tag": "a",
+  "rect": {
+   "x": 569.5,
+   "y": 431.81,
+   "w": 68,
+   "h": 48
+  },
+  "click": false,
+  "focusable": true
+ },
+ {
+  "cid": "c57",
+  "kind": "field",
+  "tag": "input",
+  "rect": {
+   "x": 143.5,
+   "y": 433.81,
+   "w": 493,
+   "h": 44
+  },
+  "click": false,
+  "focusable": true
+ }
+]

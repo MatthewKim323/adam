@@ -25,3 +25,6 @@ dist-ssr
 
 .clone
 find
+
+# origin blackout: the source url stays local
+reference/*/.origin.json

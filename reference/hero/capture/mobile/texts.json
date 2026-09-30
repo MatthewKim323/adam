@@ -1,0 +1,170 @@
+[
+ {
+  "text": "They trust us",
+  "x": 140.13,
+  "y": 134,
+  "w": 89.75,
+  "h": 20,
+  "lines": 1,
+  "font": "400 16px/24px Inter Tight Variable Regular",
+  "color": "rgba(255, 255, 255, 0.8)",
+  "cid": "c9"
+ },
+ {
+  "text": "4,9",
+  "x": 212.48,
+  "y": 162,
+  "w": 19.03,
+  "h": 17,
+  "lines": 1,
+  "font": "400 14px/21px Inter Tight Variable Regular",
+  "color": "rgb(255, 255, 255)",
+  "cid": "c23"
+ },
+ {
+  "text": "Turn traffic into",
+  "x": 49.13,
+  "y": 204,
+  "w": 271.73,
+  "h": 51,
+  "lines": 1,
+  "font": "400 42px/50.4px Inter Tight",
+  "color": "rgb(255, 255, 255)",
+  "cid": "c31"
+ },
+ {
+  "text": "s",
+  "x": 105.5,
+  "y": 254.41,
+  "w": 19.98,
+  "h": 51,
+  "lines": 1,
+  "font": "400 42px/50.4px Inter Tight",
+  "color": "rgb(255, 254, 84)"
+ },
+ {
+  "text": "i",
+  "x": 125.48,
+  "y": 254.41,
+  "w": 8,
+  "h": 51,
+  "lines": 1,
+  "font": "400 42px/50.4px Inter Tight",
+  "color": "rgb(255, 254, 84)"
+ },
+ {
+  "text": "g",
+  "x": 133.48,
+  "y": 254.41,
+  "w": 23.63,
+  "h": 51,
+  "lines": 1,
+  "font": "400 42px/50.4px Inter Tight",
+  "color": "rgb(255, 254, 84)"
+ },
+ {
+  "text": "n",
+  "x": 157.11,
+  "y": 254.41,
+  "w": 22.64,
+  "h": 51,
+  "lines": 1,
+  "font": "400 42px/50.4px Inter Tight",
+  "color": "rgb(255, 254, 84)"
+ },
+ {
+  "text": "-",
+  "x": 179.75,
+  "y": 254.41,
+  "w": 17.31,
+  "h": 51,
+  "lines": 1,
+  "font": "400 42px/50.4px Inter Tight",
+  "color": "rgb(255, 254, 84)"
+ },
+ {
+  "text": "u",
+  "x": 197.06,
+  "y": 254.41,
+  "w": 22.44,
+  "h": 51,
+  "lines": 1,
+  "font": "400 42px/50.4px Inter Tight",
+  "color": "rgb(255, 254, 84)"
+ },
+ {
+  "text": "p",
+  "x": 219.5,
+  "y": 254.41,
+  "w": 23.59,
+  "h": 51,
+  "lines": 1,
+  "font": "400 42px/50.4px Inter Tight",
+  "color": "rgb(255, 254, 84)"
+ },
+ {
+  "text": "s",
+  "x": 243.09,
+  "y": 254.41,
+  "w": 19.98,
+  "h": 51,
+  "lines": 1,
+  "font": "400 42px/50.4px Inter Tight",
+  "color": "rgb(255, 254, 84)"
+ },
+ {
+  "text": "automatically",
+  "x": 65.64,
+  "y": 304.81,
+  "w": 238.7,
+  "h": 51,
+  "lines": 1,
+  "font": "400 42px/50.4px Inter Tight",
+  "color": "rgb(255, 255, 255)",
+  "cid": "c31"
+ },
+ {
+  "text": "Seo helps you analyze, optimize, and dominate search rankings with AI-powered SEO tools built for real growth — not just reports.",
+  "x": 21.2,
+  "y": 373.22,
+  "w": 330.41,
+  "h": 51,
+  "lines": 5,
+  "font": "400 12px/18px Inter Tight Variable Regular",
+  "color": "rgb(255, 255, 255)",
+  "cid": "c48"
+ },
+ {
+  "text": "Enter your professional email address...",
+  "x": 40,
+  "y": 509.72,
+  "w": 261.03,
+  "h": 17,
+  "lines": 1,
+  "font": "400 14px/normal Inter",
+  "color": "rgba(252, 252, 252, 0.6)",
+  "cid": "c55"
+ },
+ {
+  "text": "Give it a try with our 14-day free trial—no credit card needed!",
+  "x": 35.23,
+  "y": 575.22,
+  "w": 302.53,
+  "h": 37.02,
+  "lines": 3,
+  "font": "400 14px/20.02px Inter Tight Variable Regular",
+  "color": "rgb(255, 255, 255)",
+  "cid": "c62"
+ },
+ {
+  "text": "Trusted by the best.",
+  "x": 123.59,
+  "y": 688.25,
+  "w": 122.81,
+  "h": 17,
+  "lines": 1,
+  "font": "400 14px/21px Inter Tight Variable Regular",
+  "color": "rgb(255, 255, 255)",
+  "cid": "c67"
+ }
+]
