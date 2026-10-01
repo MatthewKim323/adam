@@ -197,17 +197,14 @@ const SCENE = {
   rightA: [1.505, 0.172, -0.2],
   rightB: [1.375, 0.207, -0.2],
   spark: [0.775, 0.41],
-  // fingertip and shoulder of each cutout, in its own uv space
+  // fingertip of each cutout, in its own uv space
   leftTip: [0.978, 0.45],
-  leftRoot: [0, 0.62],
   rightTip: [0.07, 0.62],
-  rightRoot: [1, 0.1],
 }
 
 // how the arms answer the pointer
 const REACH = {
-  maxTurn: 0.05, // radians either way, pivoting at the shoulder
-  extend: 0.014, // design units toward the pointer at full pull
+  lift: 0.03, // max vertical drift toward the pointer, design units
   near: 0.12, // full pull inside this distance from a fingertip
   far: 0.6, // no pull beyond this
   gap: 0.22, // pointer this close to the meeting point speeds the approach
@@ -225,7 +222,6 @@ const smooth = (e0: number, e1: number, x: number) => {
 }
 const rotate = ([x, y]: Vec, a: number): Vec => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)]
 const dist = (a: Vec, b: Vec) => Math.hypot(a[0] - b[0], a[1] - b[1])
-const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
 
 // a point of a layer (given in its uv space) in design space
 function pointOf(xf: Xf, size: Vec, uv: number[]): Vec {
@@ -233,27 +229,18 @@ function pointOf(xf: Xf, size: Vec, uv: number[]): Vec {
   return [xf[0] + ox, xf[1] + oy]
 }
 
-type Arm = { size: Vec; tip: number[]; root: number[]; turn: number; pull: number }
+type Arm = { size: Vec; tip: number[]; lift: number }
 
-// pivot an arm at its shoulder so the fingertip leans toward the pointer
+// drift an arm up or down toward the pointer's height (never sideways)
 function aim(arm: Arm, base: Xf, pointer: Vec | null, dt: number): Xf {
-  const root = pointOf(base, arm.size, arm.root)
   const tip = pointOf(base, arm.size, arm.tip)
-  let turn = 0
-  let pull = 0
+  let lift = 0
   if (pointer) {
-    pull = smooth(REACH.far, REACH.near, dist(pointer, tip))
-    const want = wrap(Math.atan2(pointer[1] - root[1], pointer[0] - root[0]) - Math.atan2(tip[1] - root[1], tip[0] - root[0]))
-    turn = Math.max(-REACH.maxTurn, Math.min(REACH.maxTurn, want)) * pull
+    const pull = smooth(REACH.far, REACH.near, dist(pointer, tip))
+    lift = Math.max(-REACH.lift, Math.min(REACH.lift, pointer[1] - tip[1])) * pull
   }
-  const k = 1 - Math.exp(-dt * REACH.stiffness)
-  arm.turn = lerp(arm.turn, turn, k)
-  arm.pull = lerp(arm.pull, pull, k)
-
-  const [cx, cy] = rotate([base[0] - root[0], base[1] - root[1]], arm.turn)
-  const len = dist(tip, root) || 1
-  const ext = arm.pull * REACH.extend
-  return [root[0] + cx + ((tip[0] - root[0]) / len) * ext, root[1] + cy + ((tip[1] - root[1]) / len) * ext, base[2] + arm.turn]
+  arm.lift = lerp(arm.lift, lift, 1 - Math.exp(-dt * REACH.stiffness))
+  return [base[0], base[1] + arm.lift, base[2]]
 }
 
 type Props = { playing?: boolean; time?: number }
@@ -301,16 +288,12 @@ export function AsciiAdam({ playing = true, time }: Props) {
       const leftArm: Arm = {
         size: [SCENE.leftWidth, (SCENE.leftWidth * left.height) / left.width],
         tip: SCENE.leftTip,
-        root: SCENE.leftRoot,
-        turn: 0,
-        pull: 0,
+        lift: 0,
       }
       const rightArm: Arm = {
         size: [SCENE.rightWidth, (SCENE.rightWidth * right.height) / right.width],
         tip: SCENE.rightTip,
-        root: SCENE.rightRoot,
-        turn: 0,
-        pull: 0,
+        lift: 0,
       }
       gl.uniform2fv(u('u_leftSize'), leftArm.size)
       gl.uniform2fv(u('u_rightSize'), rightArm.size)
