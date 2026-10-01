@@ -206,13 +206,13 @@ const SCENE = {
 
 // how the arms answer the pointer
 const REACH = {
-  maxTurn: 0.14, // radians either way, pivoting at the shoulder
-  extend: 0.035, // design units toward the pointer at full pull
-  near: 0.15, // full pull inside this distance from a fingertip
-  far: 0.9, // no pull beyond this
+  maxTurn: 0.05, // radians either way, pivoting at the shoulder
+  extend: 0.014, // design units toward the pointer at full pull
+  near: 0.12, // full pull inside this distance from a fingertip
+  far: 0.6, // no pull beyond this
   gap: 0.22, // pointer this close to the meeting point speeds the approach
   rush: 2, // extra timeline speed with the pointer right in the gap
-  stiffness: 6, // spring rate, 1/s
+  stiffness: 2.2, // spring rate, 1/s
 }
 
 type Vec = [number, number]
