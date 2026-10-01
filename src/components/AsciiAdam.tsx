@@ -24,6 +24,7 @@ out vec4 outColor;
 uniform vec2 u_res;        // canvas px
 uniform float u_cell;      // cell px
 uniform float u_time;      // seconds into the loop
+uniform float u_wall;      // free-running seconds, drives the scramble flicker
 uniform float u_aspect;
 uniform sampler2D u_atlas; // RAMP glyphs, one row
 uniform float u_glyphs;
@@ -32,13 +33,12 @@ uniform sampler2D u_right;
 uniform vec2 u_leftSize;   // design units
 uniform vec2 u_rightSize;
 
-// layer transforms: xy = center, z = rotation (radians)
-uniform vec3 u_leftA;
-uniform vec3 u_leftB;
-uniform vec3 u_rightA;
-uniform vec3 u_rightB;
+// layer transforms (xy = center, z = rotation in radians), solved per frame
+uniform vec3 u_leftX;
+uniform vec3 u_rightX;
 uniform vec2 u_spark;
-
+uniform vec2 u_pointer;    // design space
+uniform float u_scramble;  // 0..1, rises while the pointer moves, decays when it rests
 
 vec4 layer(sampler2D tex, vec2 p, vec3 xf, vec2 size) {
   vec2 d = p - xf.xy;
@@ -64,11 +64,9 @@ void main() {
 
   float t = u_time;
   float k = smoothstep(0.0, 6.8, t);
-  vec3 lx = mix(u_leftA, u_leftB, k);
-  vec3 rx = mix(u_rightA, u_rightB, k);
 
-  vec4 L = layer(u_left, p, lx, u_leftSize);
-  vec4 R = layer(u_right, p, rx, u_rightSize);
+  vec4 L = layer(u_left, p, u_leftX, u_leftSize);
+  vec4 R = layer(u_right, p, u_rightX, u_rightSize);
 
   // left arm reads cool grey-white, right arm warm
   float lg = dot(L.rgb, vec3(0.299, 0.587, 0.114));
@@ -102,6 +100,20 @@ void main() {
   float lum = clamp(dot(col, vec3(0.299, 0.587, 0.114)), 0.0, 1.0) * a;
   lum = pow(lum, 1.9);
   float idx = floor(clamp(lum, 0.0, 0.999) * u_glyphs);
+
+  // decode scramble around the pointer: glyphs flip to random characters
+  // while it moves, then resolve back to the image as it settles
+  float near = u_scramble * smoothstep(0.16, 0.03, distance(p, u_pointer));
+  float tick = floor(u_wall * 18.0 + hash(cell) * 7.0);
+  float roll = hash(cell + tick * 0.137);
+  if (idx >= 1.0 && roll < near) {
+    idx = 1.0 + floor(hash(cell * 1.31 + tick) * (u_glyphs - 1.0));
+  } else if (idx < 1.0 && roll < near * 0.35) {
+    // a little noise in the dark around it
+    idx = 1.0 + floor(hash(cell + tick * 0.71) * 3.0);
+    col = vec3(0.32, 0.3, 0.3);
+    lum = 0.18;
+  }
   if (idx < 1.0) { outColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
 
   vec2 auv = vec2((idx + local.x) / u_glyphs, local.y);
@@ -185,6 +197,63 @@ const SCENE = {
   rightA: [1.505, 0.172, -0.2],
   rightB: [1.375, 0.207, -0.2],
   spark: [0.775, 0.41],
+  // fingertip and shoulder of each cutout, in its own uv space
+  leftTip: [0.978, 0.45],
+  leftRoot: [0, 0.62],
+  rightTip: [0.07, 0.62],
+  rightRoot: [1, 0.1],
+}
+
+// how the arms answer the pointer
+const REACH = {
+  maxTurn: 0.14, // radians either way, pivoting at the shoulder
+  extend: 0.035, // design units toward the pointer at full pull
+  near: 0.15, // full pull inside this distance from a fingertip
+  far: 0.9, // no pull beyond this
+  gap: 0.22, // pointer this close to the meeting point speeds the approach
+  rush: 2, // extra timeline speed with the pointer right in the gap
+  stiffness: 6, // spring rate, 1/s
+}
+
+type Vec = [number, number]
+type Xf = [number, number, number]
+
+const lerp = (a: number, b: number, k: number) => a + (b - a) * k
+const smooth = (e0: number, e1: number, x: number) => {
+  const k = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)))
+  return k * k * (3 - 2 * k)
+}
+const rotate = ([x, y]: Vec, a: number): Vec => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)]
+const dist = (a: Vec, b: Vec) => Math.hypot(a[0] - b[0], a[1] - b[1])
+const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
+
+// a point of a layer (given in its uv space) in design space
+function pointOf(xf: Xf, size: Vec, uv: number[]): Vec {
+  const [ox, oy] = rotate([(uv[0] - 0.5) * size[0], (uv[1] - 0.5) * size[1]], xf[2])
+  return [xf[0] + ox, xf[1] + oy]
+}
+
+type Arm = { size: Vec; tip: number[]; root: number[]; turn: number; pull: number }
+
+// pivot an arm at its shoulder so the fingertip leans toward the pointer
+function aim(arm: Arm, base: Xf, pointer: Vec | null, dt: number): Xf {
+  const root = pointOf(base, arm.size, arm.root)
+  const tip = pointOf(base, arm.size, arm.tip)
+  let turn = 0
+  let pull = 0
+  if (pointer) {
+    pull = smooth(REACH.far, REACH.near, dist(pointer, tip))
+    const want = wrap(Math.atan2(pointer[1] - root[1], pointer[0] - root[0]) - Math.atan2(tip[1] - root[1], tip[0] - root[0]))
+    turn = Math.max(-REACH.maxTurn, Math.min(REACH.maxTurn, want)) * pull
+  }
+  const k = 1 - Math.exp(-dt * REACH.stiffness)
+  arm.turn = lerp(arm.turn, turn, k)
+  arm.pull = lerp(arm.pull, pull, k)
+
+  const [cx, cy] = rotate([base[0] - root[0], base[1] - root[1]], arm.turn)
+  const len = dist(tip, root) || 1
+  const ext = arm.pull * REACH.extend
+  return [root[0] + cx + ((tip[0] - root[0]) / len) * ext, root[1] + cy + ((tip[1] - root[1]) / len) * ext, base[2] + arm.turn]
 }
 
 type Props = { playing?: boolean; time?: number }
@@ -229,13 +298,62 @@ export function AsciiAdam({ playing = true, time }: Props) {
       gl.uniform1i(u('u_atlas'), 0)
       gl.uniform1f(u('u_glyphs'), RAMP.length)
       gl.uniform1f(u('u_aspect'), ASPECT)
-      gl.uniform2f(u('u_leftSize'), SCENE.leftWidth, (SCENE.leftWidth * left.height) / left.width)
-      gl.uniform2f(u('u_rightSize'), SCENE.rightWidth, (SCENE.rightWidth * right.height) / right.width)
-      gl.uniform3fv(u('u_leftA'), SCENE.leftA)
-      gl.uniform3fv(u('u_leftB'), SCENE.leftB)
-      gl.uniform3fv(u('u_rightA'), SCENE.rightA)
-      gl.uniform3fv(u('u_rightB'), SCENE.rightB)
-      gl.uniform2fv(u('u_spark'), SCENE.spark)
+      const leftArm: Arm = {
+        size: [SCENE.leftWidth, (SCENE.leftWidth * left.height) / left.width],
+        tip: SCENE.leftTip,
+        root: SCENE.leftRoot,
+        turn: 0,
+        pull: 0,
+      }
+      const rightArm: Arm = {
+        size: [SCENE.rightWidth, (SCENE.rightWidth * right.height) / right.width],
+        tip: SCENE.rightTip,
+        root: SCENE.rightRoot,
+        turn: 0,
+        pull: 0,
+      }
+      gl.uniform2fv(u('u_leftSize'), leftArm.size)
+      gl.uniform2fv(u('u_rightSize'), rightArm.size)
+      const uLeft = u('u_leftX')
+      const uRight = u('u_rightX')
+      const uSpark = u('u_spark')
+      const uTime = u('u_time')
+      const uPointer = u('u_pointer')
+      const uScramble = u('u_scramble')
+      const uWall = u('u_wall')
+      let scramble = 0
+      let lastPointer: Vec | null = null
+
+      // the spark sits between the fingertips; this keeps it on its tuned spot at rest
+      const restMid = (() => {
+        const a = pointOf(SCENE.leftB as Xf, leftArm.size, SCENE.leftTip)
+        const b = pointOf(SCENE.rightB as Xf, rightArm.size, SCENE.rightTip)
+        return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
+      })()
+      const sparkNudge: Vec = [SCENE.spark[0] - restMid[0], SCENE.spark[1] - restMid[1]]
+
+      // pointer in design space, or null when it is off the art
+      let pointer: Vec | null = null
+      const interactive = time === undefined && !reduced
+      const onMove = (e: PointerEvent) => {
+        const r = canvas.getBoundingClientRect()
+        const x = e.clientX - r.left
+        const y = e.clientY - r.top
+        if (x < 0 || y < 0 || x > r.width || y > r.height) {
+          pointer = null
+          return
+        }
+        const unit = Math.max(r.width / ASPECT, r.height)
+        pointer = [(x - r.width / 2) / unit + ASPECT / 2, (y - r.height / 2) / unit + 0.5]
+      }
+      const onLeave = () => {
+        pointer = null
+      }
+      if (interactive) {
+        window.addEventListener('pointermove', onMove, { passive: true })
+        document.documentElement.addEventListener('pointerleave', onLeave)
+        window.addEventListener('blur', onLeave)
+      }
 
       let atlasCell = 0
       const resize = () => {
@@ -260,21 +378,58 @@ export function AsciiAdam({ playing = true, time }: Props) {
       const ro = new ResizeObserver(resize)
       ro.observe(canvas)
 
-      const start = performance.now()
-      let paused = 0
-      let last = start
+      let clock = 0
+      let last = performance.now()
+      let drawn = false
       const frame = (now: number) => {
-        if (!playingRef.current) paused += now - last
+        const dt = Math.min(0.1, (now - last) / 1000)
         last = now
-        const t =
-          time ?? (reduced ? LOOP - 0.5 : (((now - start - paused) / 1000) % LOOP))
-        gl.uniform1f(u('u_time'), t)
+        const live = interactive && playingRef.current
+        // off screen: hold the last frame and skip the GPU work
+        if (interactive && !live && drawn) {
+          raf = requestAnimationFrame(frame)
+          return
+        }
+        drawn = true
+
+        const t0 = time ?? (reduced ? LOOP - 0.5 : clock)
+        const k = smooth(0, 6.8, t0)
+        const baseL = SCENE.leftA.map((v, i) => lerp(v, SCENE.leftB[i], k)) as Xf
+        const baseR = SCENE.rightA.map((v, i) => lerp(v, SCENE.rightB[i], k)) as Xf
+
+        // pointer in the gap between the fingers hurries them together
+        const rush = live && pointer ? smooth(REACH.gap, REACH.gap * 0.25, dist(pointer, SCENE.spark as Vec)) : 0
+        if (live) clock = (clock + dt * (1 + REACH.rush * rush)) % LOOP
+
+        const lx = aim(leftArm, baseL, live ? pointer : null, dt)
+        const rx = aim(rightArm, baseR, live ? pointer : null, dt)
+        const a = pointOf(lx, leftArm.size, SCENE.leftTip)
+        const b = pointOf(rx, rightArm.size, SCENE.rightTip)
+
+        gl.uniform3fv(uLeft, lx)
+        gl.uniform3fv(uRight, rx)
+        gl.uniform2f(uSpark, (a[0] + b[0]) / 2 + sparkNudge[0], (a[1] + b[1]) / 2 + sparkNudge[1])
+        // scramble follows pointer speed: quick to rise, slow to settle
+        let target = 0
+        if (live && pointer && lastPointer && dt > 0) target = Math.min(1, dist(pointer, lastPointer) / dt / 0.5)
+        lastPointer = live && pointer ? [pointer[0], pointer[1]] : null
+        scramble = lerp(scramble, target, 1 - Math.exp(-dt * (target > scramble ? 14 : 2.2)))
+        gl.uniform2fv(uPointer, pointer ?? [-10, -10])
+        gl.uniform1f(uScramble, interactive ? scramble : 0)
+
+        gl.uniform1f(uTime, t0)
+        gl.uniform1f(uWall, now / 1000)
         gl.drawArrays(gl.TRIANGLES, 0, 3)
-        if (time === undefined && !reduced) raf = requestAnimationFrame(frame)
+        if (interactive) raf = requestAnimationFrame(frame)
       }
       raf = requestAnimationFrame(frame)
 
-      cleanup = () => ro.disconnect()
+      cleanup = () => {
+        ro.disconnect()
+        window.removeEventListener('pointermove', onMove)
+        document.documentElement.removeEventListener('pointerleave', onLeave)
+        window.removeEventListener('blur', onLeave)
+      }
     })
 
     let cleanup = () => {}
