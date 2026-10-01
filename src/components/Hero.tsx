@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { AsciiAdam } from './AsciiAdam'
 import { motion, useInView } from 'motion/react'
 import { ClientTicker } from './ClientTicker'
 import { RotatingWord, useWordWidths } from './RotatingWord'
@@ -59,32 +60,27 @@ type HeroProps = {
 
 export function Hero({ still }: HeroProps = {}) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const bgRef = useRef<HTMLDivElement>(null)
   const [measureRef, widths] = useWordWidths()
   const [word, setWord] = useState(WORDS[still?.word ?? 0])
   const [email, setEmail] = useState('')
   // once something was typed, the native placeholder takes over for good
   const [touched, setTouched] = useState(false)
-  const videoInView = useInView(videoRef)
+  const bgInView = useInView(bgRef)
+  const [pageVisible, setPageVisible] = useState(() => !document.hidden)
 
-  // the background loop only plays while it can be seen
+  // the background art only animates while it can be seen
   useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-    const sync = () => {
-      if (videoInView && !document.hidden) video.play().catch(() => {})
-      else video.pause()
-    }
-    sync()
+    const sync = () => setPageVisible(!document.hidden)
     document.addEventListener('visibilitychange', sync)
     return () => document.removeEventListener('visibilitychange', sync)
-  }, [videoInView])
+  }, [])
 
   return (
     <div className="hero" data-clone-root ref={rootRef}>
       <div className="hero__main">
-        <div className="hero__bg">
-          <video ref={videoRef} src="/hero/videos/vid-7d635e9887.mp4" autoPlay loop muted playsInline preload="auto" />
+        <div className="hero__bg" ref={bgRef}>
+          <AsciiAdam playing={bgInView && pageVisible} />
         </div>
         <div className="hero__content">
           <div className="hero__top">
