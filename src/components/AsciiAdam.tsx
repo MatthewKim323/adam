@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react'
 
 // dim -> bright; the last entry is the inverted "?" tile
 const RAMP = [' ', '.', ':', '-', '+', '*', '%', '#', '@', 'TILE']
-const LOOP = 9.55 // seconds
+const LOOP = 9.55 // seconds from apart to touching (and holding); then it plays back in reverse
 const ASPECT = 3696 / 2304 // design frame, covered onto the canvas
 const CELL = 21 / 2304 // cell size as a fraction of the covered frame's height
 
@@ -392,14 +392,17 @@ export function AsciiAdam({ playing = true, time }: Props) {
         }
         drawn = true
 
-        const t0 = time ?? (reduced ? LOOP - 0.5 : clock)
+        // ping-pong: touch, hold, then ease back apart instead of restarting
+        const t0 = time ?? (reduced ? LOOP - 0.5 : clock < LOOP ? clock : 2 * LOOP - clock)
         const k = smooth(0, 6.8, t0)
         const baseL = SCENE.leftA.map((v, i) => lerp(v, SCENE.leftB[i], k)) as Xf
         const baseR = SCENE.rightA.map((v, i) => lerp(v, SCENE.rightB[i], k)) as Xf
 
         // pointer in the gap between the fingers hurries them together
         const rush = live && pointer ? smooth(REACH.gap, REACH.gap * 0.25, dist(pointer, SCENE.spark as Vec)) : 0
-        if (live) clock = (clock + dt * (1 + REACH.rush * rush)) % LOOP
+        // pointer in the gap: hurry them together, and hold them there on the way back
+        const speed = clock < LOOP ? 1 + REACH.rush * rush : 1 - rush
+        if (live) clock = (clock + dt * speed) % (2 * LOOP)
 
         const lx = aim(leftArm, baseL, live ? pointer : null, dt)
         const rx = aim(rightArm, baseR, live ? pointer : null, dt)
